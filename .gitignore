@@ -9,7 +9,8 @@
 .idea/**/contentModel.xml
 
 # Photos added for testing and processing
-.data/**/*
+data/*
+Preprocessed/*
 
 # Sensitive or high-churn files
 .idea/**/dataSources/
