@@ -1,68 +1,65 @@
-from skimage import io, measure, img_as_float
-import matplotlib.pyplot as plt
 import cv2
 import numpy as np
-from scipy import ndimage
 
 
-def thresh(number, threshpoint):
-    if number < threshpoint:
-        return 0
-    else:
-        return 1
+def cubeCircles(image, dp=1, minDist=40, param1=400, param2=40, minRadius=9, maxRadius=0):
+    cubes = cv2.imread(image)
+    # filenames[i], 1, 40, 400, 40
+    # dziala dla 30; 40;
+    # na 46 wykrywa jedno, ale poprawnie;
+    # 2 (wykrywa przednie); 7(wykrywa jedno);
+    # 17 (wykrywa tylko 2);19 - jedno; 21 jedno;
+    # 24 - dwa; 25 - wykrywa 10; 27 wykrywa 1;
 
+    gray = cv2.cvtColor(cubes, cv2.COLOR_BGR2GRAY)
+    img = cv2.medianBlur(gray, 9)
 
-def gamma(img):
-    g = np.mean(img)
-    return img**g
+    cimg = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
+    #minDist - srednia odleglosc
+    circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, dp, minDist, param1=param1, param2=param2, minRadius=minRadius, maxRadius=maxRadius)
+    circles = np.uint16(np.around(circles))
 
-def contrast(img):
-    percmin = 0.3
-    percmax = 2.0
-    MIN = np.percentile(img, percmin)
-    MAX = np.percentile(img, 100-percmax)
-    norm = (img - MIN) / (MAX - MIN)
-    norm[norm[:, :] > 1] = 1
-    norm[norm[:, :] < 0] = 0
-    return norm
+    licznik = 0
+    for i in circles[0, :]:
+        #outer circle
+        cv2.circle(cubes, (i[0], i[1]), i[2], (0, 255, 0), 2)
+        licznik += 1
+        #center of the circle
+        cv2.circle(cubes, (i[0], i[1]), 2, (0, 0, 255), 5)          #czy ta 2 jest promieniem?
 
+    # Write some Text
 
-def prepare_photo(photo):
-    work = cv2.cvtColor(photo, cv2.COLOR_BGR2GRAY)
-    _, work = cv2.threshold(work, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    bottomLeftCornerOfText = (10, 30)
+    fontScale = 0.5
+    fontColor = (255, 0, 0)
+    lineType = 2
 
-    contour_array, _ = cv2.findContours(work, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    cv2.putText(cubes, "Suma liczby wykrytych oczek: " + str(licznik), bottomLeftCornerOfText, font, fontScale, fontColor, lineType)
 
-    contours = []
+    tytul = "Circle detection - Suma liczby wykrytych oczek: " + str(licznik)
+    cv2.imshow(tytul, cubes)
+    #im = cv2.resize(cubes, (600, 600))
+    #cv2.imshow(tytul, im)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-    #Weź kontury dłuższe niż ileś tam pikseli
-    for xD in contour_array:
-        if cv2.contourArea(xD) > 60:
-            contours.append(xD)
-
-    cv2.drawContours(photo, contours, -1, (0, 255, 0), 3)
-
-    return photo
-
-
-#  ][\\    //][       //\\       ][   ][\\    ][
-#  ][ \\  // ][      //  \\      ][   ][ \\   ][
-#  ][  \\//  ][     //====\\     ][   ][  \\  ][
-#  ][        ][    //      \\    ][   ][   \\ ][
-#  ][        ][   //        \\   ][   ][    \\][
 
 if __name__ == '__main__':
-    filenames = []
+    filenames = ['./data/' + str(28) + '.jpg']
+    '''for i in range(10, 50, 10):
+        filenames.append('./data/' + str(i) + '.jpg')'''
 
-    for i in range(1, 12):
-        filenames.append(str(i))
-
-    filenames.append("kostka")
-
-    images = [cv2.imread('./data/' + i + '.jpg') for i in filenames]
+    #filenames.append("kostka")
 
     for i in range(0, len(filenames)):
-        plt.clf()
-        io.imshow(prepare_photo(images[i]))
-        plt.savefig('./Preprocessed/' + filenames[i] + '.png')
+        cubeCircles(filenames[i], 1, 200, 200, 25)
+
+
+
+#28         filenames[i], 1, 200, 200, 25       wykrywa dwa poprawnie i trzecie błędnie na całej kostce
+#46         filenames[i], 1, 45, 550, 30
+#31         filenames[i], 1, 45, 550, 35
+#43         filenames[i], 1, 50, 600, 25
+#48         filenames[i], 1, 100, 400, 55
