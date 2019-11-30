@@ -157,11 +157,19 @@ if __name__ == '__main__':
 
         centroids = remove_points_from_arr(to_remove, centroids)
 
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        bottomLeftCornerOfText = (10, 30)
+        fontScale = 1
+        fontColor = (255, 0, 0)
+        lineType = 2
+
         # Przerobienie tablicy na kształt odpowiedni do plotowania
         # (z tablicy rozmiarów n x 2 do tablicy o rozmiarze 2 x n)
         centroids = change_shape(centroids)
-
+        cv2.putText(xD, 'Ilosc oczek: {0}'.format(len(centroids[0])),
+                    bottomLeftCornerOfText, font, fontScale, fontColor, lineType)
         plt.plot(centroids[0], centroids[1], 'o', markersize=5, color="#ff00ff")
 
         io.imshow(cv2.cvtColor(xD, cv2.COLOR_BGR2RGB))
-        plt.savefig('./Preprocessed/' + filenames[i] + ',count_' + str(len(centroids[0])) + '.png')
+
+        plt.savefig('./Preprocessed/' + filenames[i] + '.png')
